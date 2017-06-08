@@ -5,7 +5,7 @@ require 'ast_utils/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "ast_utils"
-  spec.version       = AstUtils::VERSION
+  spec.version       = ASTUtils::VERSION
   spec.authors       = ["Soutaro Matsumoto"]
   spec.email         = ["matsumoto@soutaro.com"]
 
@@ -25,4 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.0"
 
   spec.add_runtime_dependency "parser", "~> 2.4"
+  spec.add_runtime_dependency "thor", "~> 0.19.4"
 end
