@@ -3,16 +3,10 @@ require "test_helper"
 class LabelingTest < Minitest::Test
   Labeling = ASTUtils::Labeling
 
+  include TestHelper
+
   def parse(source)
     Parser::CurrentRuby.parse(source)
-  end
-
-  def dig(node, *indexes)
-    if indexes.size == 1
-      node.children[indexes.first]
-    else
-      dig(node.children[indexes.first], *indexes.drop(1))
-    end
   end
 
   def test_lvar
