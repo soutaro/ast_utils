@@ -2,7 +2,9 @@ require "ast_utils/version"
 
 require "parser/current"
 require "pathname"
+require "set"
 
+require "ast_utils/node_set"
 require "ast_utils/node_helper"
 require "ast_utils/partial_map"
 require "ast_utils/labeling"
