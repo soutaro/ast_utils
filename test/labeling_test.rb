@@ -108,4 +108,37 @@ end
     refute_equal dig(labeled, 0, 0), dig(labeled, 1, 2, 1, 1, 0), "a in top != a in A::B"
     refute_equal dig(labeled, 1, 2, 0, 0), dig(labeled, 1, 2, 1, 1, 0), "a in A != a in A::B"
   end
+
+  def test_procarg0
+    node = parse(<<-EOR)
+foo do |(a, (b, c))| () end
+    EOR
+
+    labeled = Labeling.translate(node: node)
+
+    assert_equal :a, dig(labeled, 1, 0, 0, 0).name
+    assert_equal :b, dig(labeled, 1, 0, 1, 0, 0).name
+    assert_equal :c, dig(labeled, 1, 0, 1, 1, 0).name
+  end
+
+  def test_match_with_lvasgn
+    node = parse(<<-EOS)
+x = 1
+/(?<x>..)(?'y'..)/ =~ (foo = gets)
+y = 2
+    EOS
+
+    labeled = Labeling.translate(node: node)
+    match = dig(labeled, 1)
+
+    assert_equal :x, dig(match, 2)[0].name
+    assert_equal :y, dig(match, 2)[1].name
+
+    assert_equal dig(labeled, 0, 0), dig(match, 2)[0]
+    assert_equal dig(labeled, 2, 0), dig(match, 2)[1]
+  end
+
+  def test_extract_variables
+    assert_equal [:x, :y], Labeling.extract_variables("(?<x>..)(?'y'..)")
+  end
 end

@@ -73,6 +73,22 @@ module ASTUtils
         children = replace(node.children, 0) {|_| labeled_name }
         node.updated(nil, children, nil)
 
+      when :procarg0
+        case node.children[0]
+        when AST::Node
+          children = map_child_node(node) {|child| translate(child, env) }
+          node.updated(nil, children, nil)
+        when Symbol
+          name = node.children[0]
+
+          labeled_name = LabeledName.new(name: name, label: next_label!)
+          env[name] = labeled_name
+
+          children = replace(node.children, 0) {|_| labeled_name }
+          node.updated(nil, children, nil)
+        else
+          raise "Unexpected node structure: #{node}"
+        end
       when :optarg, :kwoptarg
         children = PartialMap.apply(node.children) do |map|
           map.on!(0) {|name| lookup_env(name: name, env: env) }
@@ -113,6 +129,13 @@ module ASTUtils
 
         node.updated(nil, children, nil)
 
+      when :match_with_lvasgn
+        names = self.class.extract_variables(node.children[0].children[0].children[0])
+        vars = names.map {|name| lookup_env(name: name, env: env) }
+
+        children = map_child_node(node) {|child| translate(child, env) }
+        node.updated(nil, children + [vars], nil)
+
       else
         children = map_child_node(node) {|child| translate(child, env) }
         node.updated(nil, children, nil)
@@ -140,6 +163,12 @@ module ASTUtils
       array = array.dup
       array[index] = yield(array[index])
       array
+    end
+
+    def self.extract_variables(string)
+      string.scan(/\(\?(\<([\w_]+)\>)|(\'([\w_]+)\')/).map do |_, b, _, d|
+        (b || d).to_sym
+      end
     end
 
     def self.translate(node:)
