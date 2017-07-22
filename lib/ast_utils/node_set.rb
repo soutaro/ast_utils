@@ -38,10 +38,18 @@ module ASTUtils
       set.map(&:object).each(&block)
     end
 
+    def empty?
+      size == 0
+    end
+
     def size
       set.size
     end
 
     include Enumerable
+
+    def +(other)
+      self.class.new(self.set + other.set)
+    end
   end
 end
