@@ -28,6 +28,7 @@ In Ruby, local variable scope can be nested, and identification on local variabl
 This utility give labels to identify local variables.
 
 ```rb
+require "parser/current"
 require "ast_utils"
 
 node = Parser::CurrentRuby.parse(source)
@@ -39,6 +40,7 @@ labeled = ASTUtils::Labeling.translate(node: node)
 `AST` has `children` but no pointer to its parent.
 
 ```rb
+require "parser/current"
 require "ast_utils"
 
 node = Parser::CurrentRuby.parse(source)
@@ -54,6 +56,7 @@ parent = navigation.parent(child_node)
 It associates outer scope and its inner scope.
 
 ```rb
+require "parser/current"
 require "ast_utils"
 
 node = Parser::CurrentRuby.parse(source)

@@ -6,7 +6,7 @@ class LabelingTest < Minitest::Test
   include TestHelper
 
   def parse(source)
-    Parser::CurrentRuby.parse(source)
+    Parser::Ruby25.parse(source)
   end
 
   def test_lvar

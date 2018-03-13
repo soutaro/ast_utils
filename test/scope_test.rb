@@ -4,7 +4,7 @@ class ScopeTest < Minitest::Test
   include TestHelper
 
   def parse(source)
-    ASTUtils::Labeling.translate(node: Parser::CurrentRuby.parse(source))
+    ASTUtils::Labeling.translate(node: Parser::Ruby25.parse(source))
   end
 
   def test_scope

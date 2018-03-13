@@ -1,4 +1,9 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require "parser/ruby25"
+Parser::Builders::Default.emit_lambda = true
+Parser::Builders::Default.emit_procarg0 = true
+
 require 'ast_utils'
 
 require 'minitest/autorun'
