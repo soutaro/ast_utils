@@ -8,8 +8,8 @@ module ASTUtils
 
     def initialize(node:)
       @root = node
-      @nodes = NodeSet.new
-      @parents = {}
+      @nodes = Set[].compare_by_identity
+      @parents = {}.compare_by_identity
     end
 
     def construct
@@ -20,13 +20,13 @@ module ASTUtils
       nodes << node
 
       each_child_node(node) do |child|
-        parents[child.__id__] = node
+        parents[child] = node
         set_parent(child)
       end
     end
 
     def parent(node)
-      parents[node.__id__]
+      parents[node]
     end
 
     def self.from(node:)
