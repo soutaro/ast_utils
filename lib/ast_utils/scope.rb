@@ -13,7 +13,7 @@ module ASTUtils
       end
 
       def eql?(other)
-        other.is_a?(Assignment) && other.node.__id__ == node.__id__ && other.variable == variable
+        other.is_a?(Assignment) && other.node.equal?(node) && other.variable == variable
       end
 
       def ==(other)
@@ -34,48 +34,48 @@ module ASTUtils
 
     def initialize(root:)
       @root = root
-      @all_scopes = NodeSet.new
-      @child_scopes = {}
-      @parent_scopes = {}
-      @sub_scopes = {}
-      @super_scopes = {}
-      @assignment_nodes = {}
-      @reference_nodes = {}
+      @all_scopes = Set.new.compare_by_identity
+      @child_scopes = {}.compare_by_identity
+      @parent_scopes = {}.compare_by_identity
+      @sub_scopes = {}.compare_by_identity
+      @super_scopes = {}.compare_by_identity
+      @assignment_nodes = {}.compare_by_identity
+      @reference_nodes = {}.compare_by_identity
     end
 
     def children(scope)
-      child_scopes[scope.__id__]
+      child_scopes[scope]
     end
 
     def parent(scope)
-      parent_scopes[scope.__id__]
+      parent_scopes[scope]
     end
 
     def subs(scope)
-      sub_scopes[scope.__id__]
+      sub_scopes[scope]
     end
 
     def sup(scope)
-      super_scopes[scope.__id__]
+      super_scopes[scope]
     end
 
     def assignments(scope, include_subs: false)
       if include_subs
-        subs(scope).inject(assignment_nodes[scope.__id__]) {|assignments, scope_|
+        subs(scope).inject(assignment_nodes[scope]) {|assignments, scope_|
           assignments + assignments(scope_, include_subst: true)
         }
       else
-        assignment_nodes[scope.__id__]
+        assignment_nodes[scope]
       end
     end
 
     def references(scope, include_subs: false)
       if include_subs
-        subs(scope).inject(reference_nodes[scope.__id__]) {|references, scope_|
+        subs(scope).inject(reference_nodes[scope]) {|references, scope_|
           references + references(scope_, include_subs: true)
         }
       else
-        reference_nodes[scope.__id__]
+        reference_nodes[scope]
       end
 
     end
@@ -95,18 +95,18 @@ module ASTUtils
 
     def add_scope(scope)
       all_scopes << scope
-      child_scopes[scope.__id__] = NodeSet.new
-      sub_scopes[scope.__id__] = NodeSet.new
-      assignment_nodes[scope.__id__] = Set.new
-      reference_nodes[scope.__id__] = Set.new
+      child_scopes[scope] = Set.new.compare_by_identity
+      sub_scopes[scope] = Set.new.compare_by_identity
+      assignment_nodes[scope] = Set.new.compare_by_identity
+      reference_nodes[scope] = Set.new.compare_by_identity
     end
 
     def child_scope!(scope, parent_scope)
       add_scope(scope)
 
       if parent_scope
-        parent_scopes[scope.__id__] = parent_scope
-        child_scopes[parent_scope.__id__] << scope
+        parent_scopes[scope] = parent_scope
+        child_scopes[parent_scope] << scope
       end
 
       each_child_node(scope) do |child|
@@ -118,10 +118,10 @@ module ASTUtils
       add_scope(scope)
 
       if super_scope
-        parent_scopes[scope.__id__] = super_scope
-        child_scopes[super_scope.__id__] << scope
-        super_scopes[scope.__id__] = super_scope
-        sub_scopes[super_scope.__id__] << scope
+        parent_scopes[scope] = super_scope
+        child_scopes[super_scope] << scope
+        super_scopes[scope] = super_scope
+        sub_scopes[super_scope] << scope
       end
 
       each_child_node(scope) do |child|
@@ -136,21 +136,21 @@ module ASTUtils
       when :block
         nested_scope!(node, current_scope)
       when :lvar
-        reference_nodes[current_scope.__id__] << node
+        reference_nodes[current_scope] << node
       when :lvasgn, :arg, :optarg, :restarg, :kwarg, :kwoptarg, :kwrestarg, :blockarg
-        assignment_nodes[current_scope.__id__] << Assignment.new(node: node, variable: node.children[0])
+        assignment_nodes[current_scope] << Assignment.new(node: node, variable: node.children[0])
         construct_children(node, current_scope)
       when :procarg0
         case node.children[0]
         when AST::Node
           construct_children(node, current_scope)
         else
-          assignment_nodes[current_scope.__id__] << Assignment.new(node: node, variable: node.children[0])
+          assignment_nodes[current_scope] << Assignment.new(node: node, variable: node.children[0])
           construct_children(node, current_scope)
         end
       when :match_with_lvasgn
         node.children[2].each do |var|
-          assignment_nodes[current_scope.__id__] << Assignment.new(node: node, variable: var)
+          assignment_nodes[current_scope] << Assignment.new(node: node, variable: var)
         end
 
         construct_children(node, current_scope)
