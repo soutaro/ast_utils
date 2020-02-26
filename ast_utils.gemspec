@@ -24,6 +24,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "minitest", "~> 5.0"
 
-  spec.add_runtime_dependency "parser", "~> 2.4"
+  spec.add_runtime_dependency "parser", "~> 2.7.0"
   spec.add_runtime_dependency "thor", ">= 0.19"
 end
