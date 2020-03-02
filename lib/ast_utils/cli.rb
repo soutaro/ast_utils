@@ -1,4 +1,5 @@
 require "thor"
+require "parser/ruby27"
 
 module ASTUtils
   class CLI < Thor
@@ -10,6 +11,31 @@ module ASTUtils
         puts "Translating node..."
         labeled = Labeling.translate(node: node)
         puts "#{labeled.inspect}"
+      end
+    end
+
+    desc "rel SCRIPTS...", "relationship between nodes in scripts..."
+    def rel(*scripts)
+      scripts.map {|script| Pathname(script) }.each do |path|
+        STDERR.puts "Parsing #{path}..."
+        node = Parser::Ruby27.parse(path.read, path.to_s)
+
+        rels = []
+
+        rel = Relationship.new(node: node) do |def_node|
+          rels << Relationship.new(node: def_node).compute_def
+        end
+        rels << rel
+
+        rel.compute_node
+
+        puts "digraph rels {"
+        rels.each do |rel|
+          rel.each_edge do |from, to|
+            puts "\"#{from}\" -> \"#{to}\""
+          end
+        end
+        puts "}"
       end
     end
   end
