@@ -1,54 +1,6 @@
 module ASTUtils
   class Relationship
-    class Vertex
-      attr_reader :node
-
-      def initialize(node)
-        @node = node
-      end
-
-      def hash
-        self.class.hash ^ node.object_id
-      end
-
-      def ==(other)
-        other.class == self.class && other.node.equal?(node)
-      end
-
-      alias eql? ==
-
-      def inspect
-        "#<#{self.class.name} node=#{node.type}(#{node.loc.line}:#{node.loc.column})>"
-      end
-
-      def to_s
-        name = self.class.name.split(/::/).last
-        loc = begin
-                "#{node.loc.line}:#{node.loc.column}~#{node.loc.last_line}:#{node.loc.last_column}"
-              rescue
-                "***"
-              end
-        "#<#{name} node=#{node.type} (#{loc})>"
-      end
-    end
-
-    class Enter < Vertex; end
-    class Leave < Vertex; end
-    class Return
-      def hash
-        self.class.hash
-      end
-
-      def ==(other)
-        other.class == self.class
-      end
-
-      alias eql? ==
-
-      def to_s
-        "#<Return>"
-      end
-    end
+    include Vertex
 
     class Logic
       attr_reader :operator

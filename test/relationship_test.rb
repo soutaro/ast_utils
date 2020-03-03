@@ -5,9 +5,7 @@ class RelationshipTest < Minitest::Test
   include TestHelper
 
   Relationship = ASTUtils::Relationship
-  Enter = Relationship::Enter
-  Leave = Relationship::Leave
-  Return = Relationship::Return
+  include ASTUtils::Vertex
 
   def parse(source)
     Parser::Ruby27.parse(source)
