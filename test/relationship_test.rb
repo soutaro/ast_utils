@@ -788,4 +788,78 @@ EOF
     rel = Relationship.new(node: node)
     rel.compute_node
   end
+
+  def test_reachables
+    node = parse(<<EOF)
+foo()
+
+while f()
+  g()
+end
+
+bar()
+EOF
+
+    rel = Relationship.new(node: node)
+    rel.compute_node
+
+    rel.reachable_vertexes_from(Enter.new(dig(node, 2))).tap do |set|
+      assert_equal Set[
+                     Leave.new(dig(node, 2)),
+                     Leave.new(dig(node))
+                   ],
+                   set
+    end
+
+    rel.reachable_vertexes_from(Enter.new(dig(node, 1, 1))).tap do |set|
+      assert_equal Set[
+                     Enter.new(dig(node, 1, 1)),
+                     Leave.new(dig(node, 1, 1)),
+                     Enter.new(dig(node, 1, 0)),
+                     Leave.new(dig(node, 1, 0)),
+                     Leave.new(dig(node, 1)),
+                     Enter.new(dig(node, 2)),
+                     Leave.new(dig(node, 2)),
+                     Leave.new(dig(node)),
+                   ],
+                   set
+    end
+  end
+
+  def test_reachings
+    node = parse(<<EOF)
+foo()
+
+while f()
+  g()
+end
+
+bar()
+EOF
+
+    rel = Relationship.new(node: node)
+    rel.compute_node
+
+    rel.reaching_vertexes_to(Leave.new(dig(node, 0))).tap do |set|
+      assert_equal Set[
+                     Enter.new(dig(node, 0)),
+                     Enter.new(dig(node))
+                   ],
+                   set
+    end
+
+    rel.reaching_vertexes_to(Enter.new(dig(node, 1, 1))).tap do |set|
+      assert_equal Set[
+                     Enter.new(dig(node, 1, 1)),
+                     Leave.new(dig(node, 1, 1)),
+                     Enter.new(dig(node, 1, 0)),
+                     Leave.new(dig(node, 1, 0)),
+                     Enter.new(dig(node, 1)),
+                     Enter.new(dig(node, 0)),
+                     Leave.new(dig(node, 0)),
+                     Enter.new(dig(node)),
+                   ],
+                   set
+    end
+  end
 end

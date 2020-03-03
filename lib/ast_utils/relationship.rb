@@ -97,6 +97,9 @@ module ASTUtils
       @retry_stack = []
       @next_stack = []
       @redo_stack = []
+
+      @reachable_vertexes = {}
+      @reaching_vertexes = {}
     end
 
     def push_jump(break_to: false, retry_to: false, next_to: false, redo_to: false)
@@ -172,6 +175,38 @@ module ASTUtils
     def compute_node
       compute(node)
       self
+    end
+
+    def reachable_vertexes_from(vertex)
+      if (vs = @reachable_vertexes[vertex])
+        vs
+      else
+        @reachable_vertexes[vertex] = Set[]
+
+        nexts = next_vertexes[vertex] || []
+        set = Set[].merge(nexts)
+        nexts.each do |v|
+          set.merge(reachable_vertexes_from(v))
+        end
+
+        @reachable_vertexes[vertex] = set
+      end
+    end
+
+    def reaching_vertexes_to(vertex)
+      if (vs = @reaching_vertexes[vertex])
+        vs
+      else
+        @reaching_vertexes[vertex] = Set[]
+
+        prevs = prev_vertexes[vertex] || []
+        set = Set[].merge(prevs)
+        prevs.each do |v|
+          set.merge(reaching_vertexes_to(v))
+        end
+
+        @reaching_vertexes[vertex] = set
+      end
     end
 
     # Returns true when there is a edge to Leave(node).
