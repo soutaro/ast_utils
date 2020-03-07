@@ -3,12 +3,12 @@ module ASTUtils
     include Vertex
 
     attr_reader :rels
-    attr_reader :fvs
+    attr_reader :vars
     attr_reader :definitions
 
-    def initialize(rels:, fvs:)
+    def initialize(rels:, vars:)
       @rels = rels
-      @fvs = fvs
+      @vars = vars
 
       @definitions = {}
     end
@@ -29,9 +29,7 @@ module ASTUtils
     end
 
     def analyze()
-      definitions[Enter.new(node)] = fvs.each.with_object({}) do |fv, hash|
-        hash[fv] = Set[nil].compare_by_identity
-      end
+      definitions[Enter.new(node)] = empty_hash
 
       changed = rels.all_vertexes
 
@@ -51,6 +49,11 @@ module ASTUtils
           case v.node.type
           when :lvasgn, :arg, :optarg, :restarg, :kwarg, :kwoptarg, :kwrestarg, :blockarg
             update_defs(v, v.node, v.node.children[0])
+          when :masgn
+            vars = v.node.children[0].children.map {|n| n.children[0] }
+            vars.each do |var|
+              update_defs(v, v.node, var)
+            end
           end
         end
 
@@ -63,14 +66,18 @@ module ASTUtils
     end
 
     def empty_hash
-      definitions[Enter.new(node)] = fvs.each.with_object({}) do |fv, hash|
-        hash[fv] = Set[nil].compare_by_identity
+      definitions[Enter.new(node)] = vars.each.with_object({}) do |var, hash|
+        hash[var] = Set[nil].compare_by_identity
       end
     end
 
     def update_defs(vertex, node, name)
-      defs = (definitions[vertex] ||= empty_hash)
-      defs[name] = Set[node].compare_by_identity
+      if vars.include?(name)
+        defs = (definitions[vertex] ||= empty_hash)
+        defs[name] = Set[node].compare_by_identity
+      else
+        raise "Unknown variable name: #{name}"
+      end
     end
 
     def merge_defs(d1, d2)
