@@ -126,6 +126,7 @@ module ASTUtils
 
     def compute_node
       compute(node)
+      connect from: Leave(node), to: Return.new
       self
     end
 
@@ -301,10 +302,10 @@ module ASTUtils
         compute(subject)
 
         if body
+          connect_nodes from_leave: subject, to_enter: body
           push_jump break_to: Leave(node), redo_to: Enter(body), next_to: Leave(body) do
             compute body
           end
-          connect_nodes from_leave: subject, to_enter: body
           connect_nodes from_leave: body, to_enter: subject
         else
           connect_nodes from_leave: subject, to_enter: subject
@@ -710,6 +711,25 @@ module ASTUtils
       else
         enum_for :each_edge
       end
+    end
+
+    include NodeHelper
+
+    def all_vertexes
+      set = Set[]
+      set.merge(next_vertexes.keys)
+      set.merge(prev_vertexes.keys)
+      set
+    end
+
+    def all_nodes(node: self.node, set: Set[].compare_by_identity)
+      set << node
+
+      each_child_node(node) do |child|
+        all_nodes(node: child, set: set)
+      end
+
+      set
     end
   end
 end
