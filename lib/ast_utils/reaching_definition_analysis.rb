@@ -50,10 +50,26 @@ module ASTUtils
           when :lvasgn, :arg, :optarg, :restarg, :kwarg, :kwoptarg, :kwrestarg, :blockarg
             update_defs(v, v.node, v.node.children[0])
           when :masgn
-            vars = v.node.children[0].children.map {|n| n.children[0] }
+            vars = v.node.children[0].children.map do |n|
+              case n.type
+              when :lvasgn
+                n.children[0]
+              when :splat
+                if n.children[0].type == :lvasgn
+                  n.children[0].children[0]
+                end
+              end
+            end.compact
+
             vars.each do |var|
               update_defs(v, v.node, var)
             end
+          when :and_asgn, :or_asgn
+            var = v.node.children[0].children[0]
+            update_defs(v, v.node, var, merge: true)
+          when :op_asgn
+            var = v.node.children[0].children[0]
+            update_defs(v, v.node, var)
           end
         end
 
@@ -71,10 +87,15 @@ module ASTUtils
       end
     end
 
-    def update_defs(vertex, node, name)
+    def update_defs(vertex, node, name, merge: false)
       if vars.include?(name)
-        defs = (definitions[vertex] ||= empty_hash)
-        defs[name] = Set[node].compare_by_identity
+        defs = definitions[vertex] ||= empty_hash
+
+        if merge
+          defs[name].add(node)
+        else
+          defs[name] = Set[node].compare_by_identity
+        end
       else
         raise "Unknown variable name: #{name}"
       end

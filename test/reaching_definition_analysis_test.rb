@@ -36,6 +36,8 @@ EOF
 
     assert_equal(
       {
+        x: Set[nil].compare_by_identity,
+        y: Set[nil].compare_by_identity
       },
       analysis.at_enter(dig(rels.node))
     )
@@ -109,7 +111,50 @@ EOF
     )
   end
 
-  def test_def_block
+  def test_block
+    rels = top_relationship(<<EOF)
+x = 123
+
+loop do
+  x.bar()
+  x = x + 2
+  x.foo()
+end
+EOF
+
+    analysis = ReachingDefinitionAnalysis.new(rels: rels, vars: Set[:x]).analyze()
+
+    assert_equal(
+      {
+        x: Set[
+          dig(rels.node, 0),
+          dig(rels.node, 1, 2, 1)
+        ].compare_by_identity
+      },
+      analysis.at_leave(dig(rels.node, 1, 2, 0))
+    )
+
+    assert_equal(
+      {
+        x: Set[
+          dig(rels.node, 1, 2, 1)
+        ].compare_by_identity
+      },
+      analysis.at_leave(dig(rels.node, 1, 2, 2))
+    )
+
+    assert_equal(
+      {
+        x: Set[
+          dig(rels.node, 0),
+          dig(rels.node, 1, 2, 1)
+        ].compare_by_identity
+      },
+      analysis.at_leave(dig(rels.node, 1))
+    )
+  end
+
+  def test_def
     rels = def_relationship(<<EOF)
 def hello(node, a=1, *b, c, d:, e: 3, **f, &g)
   name = 30
@@ -150,9 +195,9 @@ EOF
     )
   end
 
-  def test_rd
+  def test_masgn
     rels = top_relationship(<<EOF)
-x,y,z = [1,2,3]
+x,y,*z = [1,2,3]
 EOF
 
     analysis = ReachingDefinitionAnalysis.new(rels: rels, vars: Set[:x, :y, :z]).analyze()
@@ -172,5 +217,59 @@ EOF
                    z: Set[dig(rels.node)].compare_by_identity
                  },
                  analysis.at_leave(dig(rels.node)))
+  end
+
+  def test_and_or_assign
+    rels = top_relationship(<<EOF)
+x = 10
+x &&= x+1
+x ||= 10
+puts x
+EOF
+
+    analysis = ReachingDefinitionAnalysis.new(rels: rels, vars: Set[:x]).analyze()
+
+    assert_equal(
+      {
+        x: Set[nil].compare_by_identity,
+      },
+      analysis.at_enter(dig(rels.node))
+    )
+
+    assert_equal(
+      {
+        x: Set[
+          dig(rels.node, 0),
+          dig(rels.node, 1),
+          dig(rels.node, 2)
+        ].compare_by_identity,
+      },
+      analysis.at_leave(dig(rels.node))
+    )
+  end
+
+  def test_op_assign
+    rels = top_relationship(<<EOF)
+x = 10
+x += 10
+EOF
+
+    analysis = ReachingDefinitionAnalysis.new(rels: rels, vars: Set[:x]).analyze()
+
+    assert_equal(
+      {
+        x: Set[nil].compare_by_identity,
+      },
+      analysis.at_enter(dig(rels.node))
+    )
+
+    assert_equal(
+      {
+        x: Set[
+          dig(rels.node, 1),
+        ].compare_by_identity,
+      },
+      analysis.at_leave(dig(rels.node))
+    )
   end
 end
