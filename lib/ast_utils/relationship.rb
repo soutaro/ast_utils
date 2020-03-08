@@ -722,14 +722,29 @@ module ASTUtils
       set
     end
 
-    def all_nodes(node: self.node, set: Set[].compare_by_identity)
-      set << node
-
-      each_child_node(node) do |child|
-        all_nodes(node: child, set: set)
+    def all_variables
+      all_vertexes.each.with_object(Set[]) do |v, set|
+        case v
+        when Leave, Enter
+          variables_from_node(v.node, set: set)
+        end
       end
+    end
 
-      set
+    def variables_from_node(node, set:)
+      case node.type
+      when :lvasgn, :lvar, :arg, :kwarg, :optarg, :kwoptarg, :blockarg, :restarg, :kwrestarg, :procarg0
+        set << node.children[0]
+      when :masgn
+        mlhs = node.children[0]
+        mlhs.children.each do |child|
+          variables_from_node(child, set: set)
+        end
+      when :splat
+        variables_from_node(node.children[0], set: set)
+      when :op_asgn, :or_asgn, :and_asgn
+        variables_from_node(node.children[0], set: set)
+      end
     end
   end
 end

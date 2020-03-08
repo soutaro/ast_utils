@@ -804,7 +804,8 @@ EOF
     rel.reachable_vertexes_from(Enter.new(dig(node, 2))).tap do |set|
       assert_equal Set[
                      Leave.new(dig(node, 2)),
-                     Leave.new(dig(node))
+                     Leave.new(dig(node)),
+                     Return.new
                    ],
                    set
     end
@@ -819,6 +820,7 @@ EOF
                      Enter.new(dig(node, 2)),
                      Leave.new(dig(node, 2)),
                      Leave.new(dig(node)),
+                     Return.new
                    ],
                    set
     end
@@ -859,5 +861,24 @@ EOF
                    ],
                    set
     end
+  end
+
+  def test_variables
+    node = parse(<<EOF)
+def foo(a, b=1, *c, d, e:, f: :f, **g, &h)
+  i = 1
+  j, *k = 20
+  x ||= 10
+  y &&= 20
+  z -= 2
+  foo {|_| }
+end
+EOF
+
+    rel = Relationship.new(node: node)
+    rel.compute_def
+
+    assert_equal Set[:a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k, :x, :y, :z, :_],
+                 rel.all_variables
   end
 end

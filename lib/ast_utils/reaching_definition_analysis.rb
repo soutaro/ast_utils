@@ -33,9 +33,14 @@ module ASTUtils
 
       changed = rels.all_vertexes
 
+      count = 0
+
       until changed.empty?
         v = changed.each.first
         changed.delete(v)
+
+        count += 1
+        puts "    | #{count}th iteration, size = #{changed.size}, vertex=#{v}..."
 
         prev = definitions[v] || empty_hash
 
@@ -65,8 +70,11 @@ module ASTUtils
               update_defs(v, v.node, var)
             end
           when :and_asgn, :or_asgn
-            var = v.node.children[0].children[0]
-            update_defs(v, v.node, var, merge: true)
+            lhs = v.node.children[0]
+            if lhs.type == :lvasgn
+              var = lhs.children[0]
+              update_defs(v, v.node, var, merge: true)
+            end
           when :op_asgn
             var = v.node.children[0].children[0]
             update_defs(v, v.node, var)

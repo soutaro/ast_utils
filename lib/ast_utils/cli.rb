@@ -29,13 +29,27 @@ module ASTUtils
 
         rel.compute_node
 
-        puts "digraph rels {"
+        # puts "digraph rels {"
+        # rels.each do |rel|
+        #   rel.each_edge do |from, to|
+        #     puts "\"#{from}\" -> \"#{to}\""
+        #   end
+        # end
+        # puts "}"
+
         rels.each do |rel|
-          rel.each_edge do |from, to|
-            puts "\"#{from}\" -> \"#{to}\""
+          case rel.node.type
+          when :def
+            puts "#{rel.node.type}:#{rel.node.children[0]} (#{rel.node.loc.line}:#{rel.node.loc.column})"
+          else
+            puts "#{rel.node.type} (#{rel.node.loc.line}:#{rel.node.loc.column})"
           end
+          vars = rel.all_variables
+          puts "  #{vars.to_a.join(", ")}"
+          start = Time.now
+          ReachingDefinitionAnalysis.new(rels: rel, vars: vars).analyze
+          puts "  ~> RDA took #{Time.now - start} secs"
         end
-        puts "}"
       end
     end
   end
