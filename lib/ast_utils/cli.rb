@@ -1,5 +1,3 @@
-require "thor"
-
 module ASTUtils
   class CLI < Thor
     desc "label SCRIPTS...", "labeling Ruby scripts given as SCRIPTS..."

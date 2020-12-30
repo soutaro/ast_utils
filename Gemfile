@@ -1,4 +1,8 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in ast_utils.gemspec
 gemspec
+
+gem "bundler"
+gem "rake"
+gem "minitest"
+gem "thor"

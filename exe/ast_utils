@@ -6,6 +6,14 @@ Parser::Builders::Default.emit_lambda = true
 Parser::Builders::Default.emit_procarg0 = true
 
 require "ast_utils"
-require "ast_utils/cli"
 
+begin
+  require "thor"
+rescue LoadError
+  puts "ast_utils command requires an optional `thor` gem:"
+  puts "Running `gem install thor` or having `gem 'thor'` in your Gemfile will solve the problem."
+  exit 1
+end
+
+require "ast_utils/cli"
 ASTUtils::CLI.start(ARGV)
