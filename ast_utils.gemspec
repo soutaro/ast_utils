@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Ruby AST Utility}
   spec.description   = %q{Ruby AST Utility}
   spec.homepage      = "https://github.com/soutaro/ast_utils"
+  spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
